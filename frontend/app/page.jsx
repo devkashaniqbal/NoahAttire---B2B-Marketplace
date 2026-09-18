@@ -93,7 +93,7 @@ function CategoryStrip({ categories, loading }) {
     <section className="py-10 bg-white border-b border-gray-100">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <h2 className="text-lg font-bold text-gray-900 mb-6">Shop by Category</h2>
-        <div className="flex gap-4 overflow-x-auto hide-scrollbar snap-x snap-mandatory scroll-px-4 -mx-4 px-4 pb-1">
+        <div className="flex flex-wrap justify-center gap-4 overflow-x-auto hide-scrollbar snap-x snap-mandatory scroll-px-4 -mx-4 px-4 pb-1">
           {loading || !categories.length
             ? Array.from({ length: 8 }).map((_, i) => (
                 <div key={i} className="flex flex-col items-center gap-2 flex-shrink-0 w-20 snap-start">

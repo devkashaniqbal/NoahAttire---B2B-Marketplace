@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import api from '@/lib/api';
 import { CATEGORY_ICONS } from '@/lib/utils';
 import toast from 'react-hot-toast';
-import { Plus, Trash2, Loader2, Package, Tag, Pencil, Search, ChevronDown, ChevronRight, FolderPlus, Upload, Image as ImageIcon } from 'lucide-react';
+import { Plus, Trash2, Loader2, Package, Tag, Pencil, Search, ChevronDown, ChevronRight, FolderPlus, Upload, Image as ImageIcon, GripVertical } from 'lucide-react';
 
 const ICON_OPTIONS = [
   'Package', 'Shirt', 'ShoppingBag', 'Baby', 'Sparkles', 'Dumbbell', 'Swords',
@@ -17,7 +17,7 @@ const ICON_OPTIONS = [
   'Tag', 'Star', 'Heart', 'Zap', 'Globe', 'Box', 'Truck', 'Award',
 ];
 
-function CategoryRow({ cat, depth = 0, onAdd, onEdit, onDelete }) {
+function CategoryRow({ cat, depth = 0, onAdd, onEdit, onDelete, dragEnabled, dragOverId, isDragging, onDragStart, onDragOverRow, onDragEnd, onDrop }) {
   const [expanded, setExpanded] = useState(true);
   const Icon = CATEGORY_ICONS[cat.icon] || Package;
   const hasChildren = cat.children?.length > 0;
@@ -25,8 +25,20 @@ function CategoryRow({ cat, depth = 0, onAdd, onEdit, onDelete }) {
   return (
     <div>
       <div
-        className={`flex items-center gap-3 py-2.5 px-4 group hover:bg-gray-50 rounded-lg transition-colors ${depth > 0 ? 'border-l-2 border-gray-100 ml-6' : ''}`}
+        draggable={dragEnabled}
+        onDragStart={(e) => { e.dataTransfer.effectAllowed = 'move'; onDragStart(cat._id); }}
+        onDragOver={(e) => { if (dragEnabled) { e.preventDefault(); onDragOverRow(cat._id); } }}
+        onDragEnd={onDragEnd}
+        onDrop={(e) => { e.preventDefault(); onDrop(cat._id); }}
+        className={`flex items-center gap-3 py-2.5 px-4 group hover:bg-gray-50 rounded-lg transition-colors ${depth > 0 ? 'border-l-2 border-gray-100 ml-6' : ''} ${dragOverId === cat._id ? 'bg-alibaba-50 ring-2 ring-alibaba-300' : ''} ${isDragging === cat._id ? 'opacity-40' : ''}`}
       >
+        {/* Drag handle */}
+        {dragEnabled && (
+          <span className="cursor-grab active:cursor-grabbing text-gray-300 hover:text-gray-500 flex-shrink-0">
+            <GripVertical className="h-4 w-4" />
+          </span>
+        )}
+
         {/* Expand toggle */}
         <button
           onClick={() => setExpanded((v) => !v)}
@@ -90,6 +102,13 @@ function CategoryRow({ cat, depth = 0, onAdd, onEdit, onDelete }) {
               onAdd={onAdd}
               onEdit={onEdit}
               onDelete={onDelete}
+              dragEnabled={dragEnabled}
+              dragOverId={dragOverId}
+              isDragging={isDragging}
+              onDragStart={onDragStart}
+              onDragOverRow={onDragOverRow}
+              onDragEnd={onDragEnd}
+              onDrop={onDrop}
             />
           ))}
         </div>
@@ -110,6 +129,8 @@ export default function AdminCategoriesPage() {
   const [form, setForm] = useState({ name: '', icon: 'Package', image: '' });
   const [submitting, setSubmitting] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [draggedId, setDraggedId] = useState(null);
+  const [dragOverId, setDragOverId] = useState(null);
 
   const uploadCategoryImage = async (file) => {
     setUploadingImage(true);
@@ -189,6 +210,56 @@ export default function AdminCategoriesPage() {
     }
   };
 
+  // Drag-and-drop reordering — only allowed between siblings (same parent level)
+  function reorderWithinArray(nodes, fromId, toId) {
+    const fromIdx = nodes.findIndex((n) => n._id === fromId);
+    const toIdx = nodes.findIndex((n) => n._id === toId);
+    if (fromIdx === -1 || toIdx === -1) return null;
+    const copy = [...nodes];
+    const [moved] = copy.splice(fromIdx, 1);
+    copy.splice(toIdx, 0, moved);
+    return copy;
+  }
+
+  function updateTreeReorder(nodes, fromId, toId) {
+    const reordered = reorderWithinArray(nodes, fromId, toId);
+    if (reordered) return reordered;
+    return nodes.map((n) =>
+      n.children?.length ? { ...n, children: updateTreeReorder(n.children, fromId, toId) } : n
+    );
+  }
+
+  function findSiblingsArray(nodes, id) {
+    if (nodes.some((n) => n._id === id)) return nodes;
+    for (const n of nodes) {
+      if (n.children?.length) {
+        const found = findSiblingsArray(n.children, id);
+        if (found) return found;
+      }
+    }
+    return null;
+  }
+
+  const handleDrop = async (targetId) => {
+    const fromId = draggedId;
+    setDraggedId(null);
+    setDragOverId(null);
+    if (!fromId || fromId === targetId) return;
+
+    const newTree = updateTreeReorder(tree, fromId, targetId);
+    const siblings = findSiblingsArray(newTree, fromId);
+    if (!siblings) return; // dropped outside its sibling group — ignore
+
+    setTree(newTree);
+    const updates = siblings.map((n, i) => ({ id: n._id, order: i + 1 }));
+    try {
+      await api.put('/categories/reorder', { updates });
+    } catch {
+      toast.error('Failed to save new order');
+      fetchCategories();
+    }
+  };
+
   // Flatten tree for search
   function flatAll(nodes, result = []) {
     nodes.forEach((n) => { result.push(n); if (n.children?.length) flatAll(n.children, result); });
@@ -215,7 +286,10 @@ export default function AdminCategoriesPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Categories</h1>
-          <p className="text-gray-500 text-sm mt-1">{totalCount} categories total · nested subcategories supported</p>
+          <p className="text-gray-500 text-sm mt-1">
+            {totalCount} categories total · nested subcategories supported
+            {!search && <span> · drag <GripVertical className="inline h-3 w-3 -mt-0.5" /> to reorder</span>}
+          </p>
         </div>
         <div className="flex gap-2">
           <div className="relative">
@@ -250,6 +324,13 @@ export default function AdminCategoriesPage() {
                 onAdd={openAdd}
                 onEdit={openEdit}
                 onDelete={setDeleteTarget}
+                dragEnabled={!search}
+                dragOverId={dragOverId}
+                isDragging={draggedId}
+                onDragStart={setDraggedId}
+                onDragOverRow={setDragOverId}
+                onDragEnd={() => { setDraggedId(null); setDragOverId(null); }}
+                onDrop={handleDrop}
               />
             ))}
           </div>

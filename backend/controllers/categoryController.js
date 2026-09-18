@@ -73,6 +73,23 @@ exports.updateCategory = async (req, res, next) => {
   }
 };
 
+exports.reorderCategories = async (req, res, next) => {
+  try {
+    const { updates } = req.body;
+    if (!Array.isArray(updates) || !updates.length) {
+      return res.status(400).json({ message: 'updates array is required' });
+    }
+    await Category.bulkWrite(
+      updates.map(({ id, order }) => ({
+        updateOne: { filter: { _id: id }, update: { $set: { order } } },
+      }))
+    );
+    res.json({ message: 'Order updated' });
+  } catch (err) {
+    next(err);
+  }
+};
+
 exports.deleteCategory = async (req, res, next) => {
   try {
     // Delete all descendants recursively
