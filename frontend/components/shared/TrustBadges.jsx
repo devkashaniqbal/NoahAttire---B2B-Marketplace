@@ -1,10 +1,8 @@
-import { ShieldCheck, Truck, RotateCcw, BadgeDollarSign, Users, Headphones } from 'lucide-react';
+import { ShieldCheck, Truck, Users, Headphones } from 'lucide-react';
 
 const ITEMS = [
   { icon: ShieldCheck, title: '100% Verified', subtitle: 'Genuine suppliers' },
-  { icon: Truck, title: 'Fast Delivery', subtitle: 'Nationwide shipping' },
-  { icon: RotateCcw, title: 'Easy Returns', subtitle: '7-day return policy' },
-  { icon: BadgeDollarSign, title: 'Money Back', subtitle: '100% guarantee' },
+  { icon: Truck, title: 'Fast Delivery', subtitle: 'International shipping' },
   { icon: Users, title: 'Trusted Platform', subtitle: 'By thousands of buyers' },
   { icon: Headphones, title: '24/7 Support', subtitle: 'Dedicated assistance' },
 ];

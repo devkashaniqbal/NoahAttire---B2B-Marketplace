@@ -2,8 +2,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import DealProductCard from '@/components/shared/DealProductCard';
-import BestSellingCard from '@/components/shared/BestSellingCard';
+import ProductCard from '@/components/shared/ProductCard';
 import CountdownTimer from '@/components/shared/CountdownTimer';
 import TrustBadges from '@/components/shared/TrustBadges';
 import { ProductCardSkeleton } from '@/components/shared/LoadingSkeleton';
@@ -327,7 +326,7 @@ export default function HomePage() {
                   key={product._id}
                   className="flex-shrink-0 snap-start w-[42vw] sm:w-[30vw] md:w-[22vw] lg:w-[17vw] max-w-[220px]"
                 >
-                  <DealProductCard product={product} />
+                  <ProductCard product={product} />
                 </div>
               ))}
             </div>
@@ -385,7 +384,7 @@ export default function HomePage() {
           ) : (
             <>
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-                {catProducts.map((product) => <BestSellingCard key={product._id} product={product} />)}
+                {catProducts.map((product) => <ProductCard key={product._id} product={product} />)}
                 {/* Skeleton tiles while loading next page */}
                 {loadingMoreCat && Array.from({ length: 5 }).map((_, i) => <ProductCardSkeleton key={`more-${i}`} />)}
               </div>

@@ -9,7 +9,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import InquiryForm from '@/components/shared/InquiryForm';
 import OrderForm from '@/components/shared/OrderForm';
 import RFQForm from '@/components/shared/RFQForm';
-import BestSellingCard from '@/components/shared/BestSellingCard';
+import ProductCard from '@/components/shared/ProductCard';
 import { useAuth } from '@/context/AuthContext';
 import api from '@/lib/api';
 import { getInitials, CATEGORY_ICONS, titleCase } from '@/lib/utils';
@@ -628,7 +628,7 @@ export default function ProductDetailPage() {
               </Link>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-              {related.map((p) => <BestSellingCard key={p._id} product={p} />)}
+              {related.map((p) => <ProductCard key={p._id} product={p} />)}
             </div>
           </div>
         )}
