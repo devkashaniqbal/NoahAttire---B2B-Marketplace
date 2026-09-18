@@ -18,10 +18,12 @@ const DEFAULT_HERO_BANNERS = [
 ];
 
 function Hero({ settings }) {
-  const headline = settings?.heroHeadline || 'SOURCE THE LATEST PRODUCTS ONLINE';
-  const subtext = settings?.heroSubtext || 'Explore top quality products at the best prices from verified B2B suppliers.';
-  const buttonText = settings?.heroButtonText || 'SHOP NOW';
-  const buttonLink = settings?.heroButtonLink || '/products';
+  // Respect the admin's Site Settings exactly — no hardcoded fallback text.
+  // A blank (or whitespace-only) field means "show nothing", not a default.
+  const headline = settings?.heroHeadline?.trim();
+  const subtext = settings?.heroSubtext?.trim();
+  const buttonText = settings?.heroButtonText?.trim();
+  const buttonLink = settings?.heroButtonLink?.trim() || '/products';
   const banners = settings?.heroBanners?.length ? settings.heroBanners : (settings?.heroImage ? [settings.heroImage] : DEFAULT_HERO_BANNERS);
 
   const [slide, setSlide] = useState(0);
@@ -49,15 +51,21 @@ function Hero({ settings }) {
         <span className="inline-block bg-amber-400 text-gray-900 text-xs font-bold tracking-wide px-3 py-1 rounded-full mb-4">
           VERIFIED SUPPLIERS
         </span>
-        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white leading-tight mb-4 drop-shadow-md max-w-xl">
-          {headline}
-        </h1>
-        <p className="text-white text-base sm:text-lg mb-7 max-w-md drop-shadow-md">
-          {subtext}
-        </p>
-        <Button variant="primary" size="xl" asChild>
-          <Link href={buttonLink}>{buttonText}</Link>
-        </Button>
+        {headline && (
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white leading-tight mb-4 drop-shadow-md max-w-xl">
+            {headline}
+          </h1>
+        )}
+        {subtext && (
+          <p className="text-white text-base sm:text-lg mb-7 max-w-md drop-shadow-md">
+            {subtext}
+          </p>
+        )}
+        {buttonText && (
+          <Button variant="primary" size="xl" asChild>
+            <Link href={buttonLink}>{buttonText}</Link>
+          </Button>
+        )}
       </div>
 
       {banners.length > 1 && (
