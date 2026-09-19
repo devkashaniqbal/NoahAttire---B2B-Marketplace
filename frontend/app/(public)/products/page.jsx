@@ -52,6 +52,7 @@ function ProductsContent() {
   const initialFilters = {
     search:   searchParams.get('search')   || '',
     category: searchParams.get('category') || '',
+    parent:   searchParams.get('parent')   || '',
     minPrice: searchParams.get('minPrice') || '',
     maxPrice: searchParams.get('maxPrice') || '',
     location: searchParams.get('location') || '',
@@ -90,6 +91,7 @@ function ProductsContent() {
     const p = { page, limit: LIMIT };
     if (f.search)   p.search   = f.search;
     if (f.category) p.category = f.category;
+    if (f.category && f.parent) p.parent = f.parent;
     if (f.minPrice) p.minPrice = f.minPrice;
     if (f.maxPrice) p.maxPrice = f.maxPrice;
     if (f.location) p.location = f.location;
@@ -161,6 +163,7 @@ function ProductsContent() {
     const params = new URLSearchParams();
     if (f.search)   params.set('search',   f.search);
     if (f.category) params.set('category', f.category);
+    if (f.category && f.parent) params.set('parent', f.parent);
     if (f.minPrice) params.set('minPrice', f.minPrice);
     if (f.maxPrice) params.set('maxPrice', f.maxPrice);
     if (f.location) params.set('location', f.location);
@@ -172,7 +175,7 @@ function ProductsContent() {
   };
 
   const applyFilter = (key, value) => {
-    const updated = { ...filters, [key]: value };
+    const updated = { ...filters, [key]: value, ...(key === 'category' ? { parent: '' } : {}) };
     setFilters(updated);
     router.push(buildUrl(updated), { scroll: false });
   };
@@ -184,7 +187,7 @@ function ProductsContent() {
   };
 
   const clearAll = () => {
-    const reset = { search: '', category: '', minPrice: '', maxPrice: '', location: '', sortBy: 'newest', hasImages: '', tags: '' };
+    const reset = { search: '', category: '', parent: '', minPrice: '', maxPrice: '', location: '', sortBy: 'newest', hasImages: '', tags: '' };
     setFilters(reset);
     setSearchInput('');
     router.push('/products', { scroll: false });
@@ -254,7 +257,7 @@ function ProductsContent() {
             {categoryTree.map((cat) => {
               const Icon = CATEGORY_ICONS[cat.icon] || CATEGORY_ICONS[cat.name] || Package;
               const hasChildren = cat.children?.length > 0;
-              const isActive = filters.category === cat.name || cat.children?.some((c) => c.name === filters.category);
+              const isActive = filters.category === cat.name || (filters.parent ? filters.parent === cat.name : cat.children?.some((c) => c.name === filters.category));
               const isOpen = openSubMenu === cat._id;
 
               return (
@@ -319,11 +322,11 @@ function ProductsContent() {
             <div className="border-t border-gray-100 my-1" />
             {openCat.children.map((sub) => {
               const SubIcon = CATEGORY_ICONS[sub.icon] || CATEGORY_ICONS[sub.name] || Package;
-              const subActive = filters.category === sub.name;
+              const subActive = filters.category === sub.name && filters.parent === openCat.name;
               return (
                 <button
                   key={sub._id}
-                  onClick={() => { applyFilter('category', subActive ? '' : sub.name); setOpenSubMenu(null); }}
+                  onClick={() => { applyMultiple(subActive ? { category: '', parent: '' } : { category: sub.name, parent: openCat.name }); setOpenSubMenu(null); }}
                   className={cn(
                     'w-full text-left px-4 py-2 text-sm flex items-center gap-2 transition-colors',
                     subActive ? 'text-navy-600 bg-navy-50 font-medium' : 'text-gray-600 hover:bg-gray-50'
@@ -331,9 +334,6 @@ function ProductsContent() {
                 >
                   <SubIcon className="h-3.5 w-3.5 flex-shrink-0" />
                   {sub.name}
-                  {categoryCounts[sub.name] > 0 && (
-                    <span className="text-xs text-gray-400 ml-auto">({categoryCounts[sub.name]})</span>
-                  )}
                 </button>
               );
             })}

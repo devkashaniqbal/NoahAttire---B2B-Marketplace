@@ -182,7 +182,7 @@ function CategoryStrip({ categories, loading }) {
             return (
               <Link
                 key={sub._id}
-                href={`/products?category=${encodeURIComponent(sub.name)}`}
+                href={`/products?category=${encodeURIComponent(sub.name)}&parent=${encodeURIComponent(openCat.name)}`}
                 onClick={() => setOpenId(null)}
                 className="flex items-center gap-2 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 hover:text-alibaba-600 transition-colors"
               >

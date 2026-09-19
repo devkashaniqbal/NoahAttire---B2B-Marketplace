@@ -119,16 +119,21 @@ exports.getMyProducts = async (req, res, next) => {
 exports.getProducts = async (req, res, next) => {
   try {
     const {
-      page = 1, limit = 12, category, subCategory, minPrice, maxPrice,
+      page = 1, limit = 12, category, parent, subCategory, minPrice, maxPrice,
       location, search, sortBy, hasImages, tags,
     } = req.query;
     const query = { moderationStatus: { $ne: 'removed' } };
 
     if (category) {
-      // Direct match against the category array — avoids cross-gender bleed
-      // when subcategory names overlap across different parent categories.
-      // subCategory param handles subcategory-level filtering separately.
-      query.category = category;
+      // `category` may be a top-level category OR a subcategory name.
+      // Products keep the parent in `category` and the subcategory in `subCategory`
+      // (older ones may hold the subcategory name directly in `category`).
+      // When `parent` is supplied, scope the subcategory match to that parent so
+      // names that repeat under different parents (e.g. "Shorts") don't bleed.
+      const subMatch = parent
+        ? { category: parent, subCategory: category }
+        : { subCategory: category };
+      query.$and = [{ $or: [{ category }, subMatch] }];
     }
     if (subCategory) query.subCategory = subCategory;
     if (location) query.location = new RegExp(location, 'i');
