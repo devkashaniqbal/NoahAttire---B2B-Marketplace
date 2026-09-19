@@ -164,12 +164,6 @@ function LoginContent() {
             </Link>
           </p>
         </div>
-
-        <div className="mt-4 bg-amber-50 border border-amber-200 rounded-lg p-3 text-xs text-amber-800">
-          <p className="font-semibold mb-1">Demo Credentials:</p>
-          <p>Admin: admin@tradehub.b2b / admin123</p>
-          <p>Seller: seller@example.com / seller123</p>
-        </div>
       </div>
     </div>
   );

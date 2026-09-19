@@ -84,14 +84,6 @@ Open **http://localhost:3000**
 
 ---
 
-## Default Credentials
-
-| Role  | Email                | Password  |
-|-------|----------------------|-----------|
-| Admin | admin@tradehub.b2b   | admin123  |
-
----
-
 ## URL Structure
 
 ### Public Pages
