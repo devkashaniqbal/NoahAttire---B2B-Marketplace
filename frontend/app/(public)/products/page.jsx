@@ -42,6 +42,20 @@ function GridSkeleton({ count = 10 }) {
   );
 }
 
+function readFilters(sp) {
+  return {
+    search:   sp.get('search')   || '',
+    category: sp.get('category') || '',
+    parent:   sp.get('parent')   || '',
+    minPrice: sp.get('minPrice') || '',
+    maxPrice: sp.get('maxPrice') || '',
+    location: sp.get('location') || '',
+    sortBy:   sp.get('sortBy')   || 'newest',
+    hasImages:sp.get('hasImages')|| '',
+    tags:     sp.get('tags')     || '',
+  };
+}
+
 function ProductsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -49,17 +63,7 @@ function ProductsContent() {
   const loadingRef = useRef(false);
   const hasMoreRef = useRef(true);
 
-  const initialFilters = {
-    search:   searchParams.get('search')   || '',
-    category: searchParams.get('category') || '',
-    parent:   searchParams.get('parent')   || '',
-    minPrice: searchParams.get('minPrice') || '',
-    maxPrice: searchParams.get('maxPrice') || '',
-    location: searchParams.get('location') || '',
-    sortBy:   searchParams.get('sortBy')   || 'newest',
-    hasImages:searchParams.get('hasImages')|| '',
-    tags:     searchParams.get('tags')     || '',
-  };
+  const initialFilters = readFilters(searchParams);
 
   const [products, setProducts]           = useState([]);
   const [total, setTotal]                 = useState(0);
@@ -73,6 +77,17 @@ function ProductsContent() {
   const [filtersOpen, setFiltersOpen]     = useState(false);
   const [filters, setFilters]             = useState(initialFilters);
   const [searchInput, setSearchInput]     = useState(initialFilters.search);
+
+  // Keep filters in sync when the URL changes from outside this page
+  // (footer/nav links, browser back/forward) — not just on first load.
+  const paramsKey = searchParams.toString();
+  useEffect(() => {
+    const next = readFilters(searchParams);
+    setFilters((prev) => (JSON.stringify(prev) === JSON.stringify(next) ? prev : next));
+    setSearchInput(next.search);
+    setOpenSubMenu(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [paramsKey]);
 
   useEffect(() => {
     api.get('/products/categories')
