@@ -1,9 +1,19 @@
+'use client';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Mail, Phone, MapPin } from 'lucide-react';
+import api from '@/lib/api';
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
+  const [categories, setCategories] = useState([]);
+
+  useEffect(() => {
+    api.get('/categories')
+      .then((res) => setCategories(res.data?.tree || []))
+      .catch(() => setCategories([]));
+  }, []);
 
   return (
     <footer className="bg-gray-900 text-white mt-auto">
@@ -30,10 +40,16 @@ export default function Footer() {
             </h4>
             <ul className="space-y-2 text-sm text-gray-400">
               <li><Link href="/products" className="hover:text-gold-400 transition-colors">Browse Products</Link></li>
-              <li><Link href={`/products?category=${encodeURIComponent("Men's Apparel")}`} className="hover:text-gold-400 transition-colors">Men&apos;s Apparel</Link></li>
-              <li><Link href={`/products?category=${encodeURIComponent("Women's Apparel")}`} className="hover:text-gold-400 transition-colors">Women&apos;s Apparel</Link></li>
-              <li><Link href="/products?category=Sportswear" className="hover:text-gold-400 transition-colors">Sportswear</Link></li>
-              <li><Link href="/products?category=Leather%20Products" className="hover:text-gold-400 transition-colors">Leather Products</Link></li>
+              {categories.map((cat) => (
+                <li key={cat._id}>
+                  <Link
+                    href={`/products?category=${encodeURIComponent(cat.name)}`}
+                    className="hover:text-gold-400 transition-colors"
+                  >
+                    {cat.name}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 
