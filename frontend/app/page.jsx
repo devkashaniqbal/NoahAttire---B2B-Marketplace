@@ -47,9 +47,6 @@ function Hero({ settings }) {
         />
       ))}
       <div className="relative h-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col items-start justify-center">
-        <span className="inline-block bg-amber-400 text-gray-900 text-xs font-bold tracking-wide px-3 py-1 rounded-full mb-4">
-          VERIFIED SUPPLIERS
-        </span>
         {headline && (
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white leading-tight mb-4 drop-shadow-md max-w-xl">
             {headline}
